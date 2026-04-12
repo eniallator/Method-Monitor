@@ -35,10 +35,10 @@ export class MethodWatcher {
       this.allStats.set(target, { targetName, methods });
     }
 
-    const orphanedStats = methods[methodName];
+    const stats = methods[methodName];
 
-    if (orphanedStats != null) {
-      orphanedStats.minDebugLevel = minDebugLevel;
+    if (stats != null) {
+      stats.minDebugLevel = minDebugLevel;
       return method;
     } else {
       const stats = (methods[methodName] = {
