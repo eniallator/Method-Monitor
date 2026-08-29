@@ -1,8 +1,7 @@
-import { raise, typedKeys, typedToEntries } from "niall-utils";
+import { mapFilter, raise, typedKeys, typedToEntries } from "niall-utils";
 
 import { IndexError } from "./error.ts";
-
-import type { TargetMap, Stats, Target } from "./types.ts";
+import type { Stats, Target, TargetMap } from "./types.ts";
 
 export class Audit {
   private readonly allStats: TargetMap<Stats>;
@@ -79,26 +78,29 @@ export class Audit {
             a.length < b.length ? a : b
           );
 
-    return this.allStats.entries().reduce((auditStr, [_, targetStats]) => {
-      const targetStr = typedToEntries(targetStats.methods, true).reduce(
-        (acc, [methodName, { calls, executionTime }]) =>
-          calls > 0
-            ? `${acc}\n  - ${methodName.toString()} Calls:${formatNumber(
-                calls
-              )} Execution Time: ${formatNumber(
-                executionTime
-              )}ms Average Execution Time: ${formatNumber(
-                executionTime / calls
-              )}ms`
-            : acc,
-        ""
-      );
+    const sections = mapFilter(
+      Array.from(this.allStats.values()),
+      ({ targetName, methods }) => {
+        const lines = mapFilter(
+          typedToEntries(methods, true),
+          ([methodName, { calls, executionTime }]) =>
+            calls > 0
+              ? `  - ${methodName.toString()} Calls:${formatNumber(
+                  calls
+                )} Execution Time: ${formatNumber(
+                  executionTime
+                )}ms Average Execution Time: ${formatNumber(
+                  executionTime / calls
+                )}ms`
+              : null
+        );
 
-      return targetStr !== ""
-        ? `${auditStr}${auditStr !== "" ? "\n\n" : ""}===== ${
-            targetStats.targetName
-          } =====${targetStr}`
-        : auditStr;
-    }, "");
+        return lines.length > 0
+          ? `===== ${targetName} =====\n${lines.join("\n")}`
+          : null;
+      }
+    );
+
+    return sections.join("\n\n");
   }
 }

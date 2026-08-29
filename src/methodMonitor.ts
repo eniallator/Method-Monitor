@@ -1,8 +1,6 @@
-import { AuditError } from "./error.ts";
-import { MethodWatcher } from "./methodWatcher.ts";
 import { Audit } from "./audit.ts";
-
-import type { RegisterParams } from "./methodWatcher.ts";
+import { AuditError } from "./error.ts";
+import { MethodWatcher, type RegisterParams } from "./methodWatcher.ts";
 import type { AnyFunction, FunctionKeys, Stats, TargetMap } from "./types.ts";
 
 export class MethodMonitor {

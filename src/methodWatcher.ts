@@ -1,5 +1,11 @@
 import { isFunction, isString } from "deep-guards";
-import { mapFilter, tuple, typedKeys } from "niall-utils";
+import {
+  mapFilter,
+  tuple,
+  typedFromEntries,
+  typedKeys,
+  typedToEntries,
+} from "niall-utils";
 
 import type {
   AnyFunction,
@@ -41,10 +47,7 @@ export class MethodWatcher {
       stats.minDebugLevel = minDebugLevel;
       return method;
     } else {
-      const stats = (methods[methodName] = {
-        ...emptyStats,
-        minDebugLevel,
-      });
+      const stats = (methods[methodName] = { ...emptyStats, minDebugLevel });
 
       return function (...args: Parameters<F>): unknown {
         const startTime = performance.now();
@@ -91,23 +94,25 @@ export class MethodWatcher {
   ): TargetMap<Stats> {
     return new Map(
       this.allStats.entries().map(([target, { targetName, methods }]) => {
-        const entries = mapFilter(typedKeys(methods, true), methodName => {
-          const methodStats = methods[methodName] as RecordableStats;
-          const snapStats =
-            snapshot?.get(target)?.methods[methodName] ?? emptyStats;
+        const entries = mapFilter(
+          typedToEntries(methods, true),
+          ([methodName, methodStats]) => {
+            const snapStats =
+              snapshot?.get(target)?.methods[methodName] ?? emptyStats;
 
-          return methodStats.minDebugLevel < debugLevel
-            ? tuple(methodName, {
-                calls: methodStats.calls - snapStats.calls,
-                executionTime:
-                  methodStats.executionTime - snapStats.executionTime,
-              })
-            : null;
-        });
+            return methodStats.minDebugLevel < debugLevel
+              ? tuple(methodName, {
+                  calls: methodStats.calls - snapStats.calls,
+                  executionTime:
+                    methodStats.executionTime - snapStats.executionTime,
+                })
+              : null;
+          }
+        );
 
         return tuple(target, {
           targetName,
-          methods: Object.fromEntries(entries),
+          methods: typedFromEntries<Record<PropertyKey, Stats>>(entries),
         });
       })
     );

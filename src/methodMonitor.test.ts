@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { AuditError } from "./error";
-import { Audit } from "./audit";
-import { MethodMonitor } from "./methodMonitor";
+import { Audit } from "./audit.ts";
+import { AuditError } from "./error.ts";
+import { MethodMonitor } from "./methodMonitor.ts";
 
 const createDummy = () => ({
   calls: 0,

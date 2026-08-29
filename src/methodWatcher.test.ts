@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { MethodWatcher } from "./methodWatcher";
-
-import type { RecordableStats } from "./types";
+import { MethodWatcher } from "./methodWatcher.ts";
+import type { RecordableStats } from "./types.ts";
 
 // Helper to get stats from watcher
 const getMethodStats = (
@@ -98,6 +97,30 @@ describe("MethodWatcher", () => {
     expect(getMethodStats(watcher, obj, "bar")).toBeDefined();
   });
 
+  it("uses the target's own name property as targetName when it's a string", () => {
+    const obj = {
+      name: "MyThing",
+      foo() {
+        // Do things
+      },
+    };
+    watcher.patchObject(obj);
+
+    expect(watcher.getStats().get(obj)?.targetName).toBe("MyThing");
+  });
+
+  it("falls back to Unknown when the target's name property isn't a string", () => {
+    const obj = {
+      name: 123,
+      foo() {
+        // Do things
+      },
+    };
+    watcher.patchObject(obj);
+
+    expect(watcher.getStats().get(obj)?.targetName).toBe("Unknown");
+  });
+
   it("updates minDebugLevel if method already registered", () => {
     const obj = {
       foo() {
@@ -132,7 +155,7 @@ describe("MethodWatcher", () => {
     const stats = watcher.getStats(3);
     const entry = stats.get(obj);
 
-    expect(entry?.methods.foo.calls).toBe(1);
+    expect(entry?.methods.foo?.calls).toBe(1);
     expect(entry?.methods.bar).toBeUndefined();
   });
 
@@ -150,7 +173,7 @@ describe("MethodWatcher", () => {
     obj.foo();
     const diff = watcher.getStats(1, snap);
 
-    expect(diff.get(obj)?.methods.foo.calls).toBe(1);
+    expect(diff.get(obj)?.methods.foo?.calls).toBe(1);
   });
 
   it("does not wrap non-function properties", () => {

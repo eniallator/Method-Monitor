@@ -1,9 +1,8 @@
 import { tuple } from "niall-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Audit } from "./audit.ts";
 import { IndexError } from "./error.ts";
-import { Audit } from "./audit";
-
 import type { Stats, Target, TargetMap } from "./types.ts";
 
 // Mock helpers
@@ -77,7 +76,9 @@ describe("Audit", () => {
   // --- forEach ---
   it("forEach calls callback for each method with calls > 0", () => {
     const calls: [Stats, Target, PropertyKey][] = [];
-    audit.forEach((...args) => calls.push(args));
+    audit.forEach((stats, target, methodName) =>
+      calls.push([stats, target, methodName])
+    );
 
     expect(calls).toStrictEqual([
       [makeStats(2, 10), targetA, "foo"],
@@ -120,5 +121,15 @@ describe("Audit", () => {
     ]);
     const emptyAudit = new Audit(emptyStatsMap);
     expect(emptyAudit.toString()).toBe("");
+  });
+
+  it("toString picks the shorter of the plain and exponential number formats", () => {
+    const bigStatsMap = makeTargetMap([
+      { name: "C", methods: { big: makeStats(100000000, 100000000) } },
+    ]);
+    const bigAudit = new Audit(bigStatsMap);
+    expect(bigAudit.toString()).toContain(
+      "Calls:1e+8 Execution Time: 1e+8ms Average Execution Time: 1ms"
+    );
   });
 });
